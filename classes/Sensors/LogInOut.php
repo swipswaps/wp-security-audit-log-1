@@ -65,24 +65,28 @@ class WSAL_Sensors_LogInOut extends WSAL_AbstractSensor {
 		$this->IncrementLoginFailure($ip);
 		
 		$occ = WSAL_DB_Occurrence::LoadMultiQuery('
-			SELECT * FROM `' . $tt1->GetTable() . '`
-			WHERE alert_id = %d AND site_id = %d
-				AND (created_on BETWEEN %d AND %d)
-				AND id IN (
-					SELECT occurrence_id as id
-					FROM `' . $tt2->GetTable() . '`
-					WHERE (name = "ClientIP" AND value = %s)
-					GROUP BY occurrence_id
-					HAVING COUNT(*) = 1
-				)
+			SELECT occ.* FROM `' . $tt1->GetTable() . '` occ
+			LEFT JOIN `' . $tt2->GetTable() . '` occm 
+			ON ( occ.id = occm.occurrence_id AND occm.name = "ClientIP" AND occm.value = %s )
+			WHERE occ.alert_id = %d AND occ.site_id = %d
+			AND (occ.created_on BETWEEN %d AND %d)
+			AND occ.id IN
+			(
+				SELECT occurrence_id as id
+				FROM `' . $tt2->GetTable() . '`
+				WHERE (name = "TargetUsername" AND value = %s)
+				GROUP BY occurrence_id
+				HAVING COUNT(*) = 1
+			)
 		', array(
+			json_encode($ip),
 			1002,
 			(function_exists('get_current_blog_id') ? get_current_blog_id() : 0),
 			mktime(0, 0, 0, $m, $d, $y),
 			mktime(0, 0, 0, $m, $d + 1, $y) - 1,
-			json_encode($ip),
+			json_encode($username),
 		));
-		
+
 		$occ = count($occ) ? $occ[0] : null;
 		
 		if($occ && $occ->IsLoaded()){
@@ -98,7 +102,8 @@ class WSAL_Sensors_LogInOut extends WSAL_AbstractSensor {
 		}else{
 			// create a new record
 			$this->plugin->alerts->Trigger(1002, array(
-				'Attempts' => 1
+				'Attempts' => 1,
+				'TargetUsername' => $username,
 			));
 		}
 	}

@@ -182,6 +182,10 @@ class WpSecurityAuditLog {
 		
 		// ensure that the system is installed and schema is correct
 		WSAL_DB_ActiveRecord::InstallAll();
+
+		//Set defaults
+		$defaultsSet = $this->GetDefaults();
+		if (!$defaultsSet) $this->SetDefaults();
 		
 		// if system wasn't installed, try migration now
 		if (!$PreInstalled && $this->CanMigrate()) $this->Migrate();
@@ -294,6 +298,29 @@ class WpSecurityAuditLog {
 	 */
 	public function GetOldVersion(){
 		return $this->GetGlobalOption('version', '0.0.0');
+	}
+
+	/**
+	 * @return string Whether the defaults have been set before. 
+	 * Would occur if this plugin was removed and re-installed and want to keep the same preferences.
+	 */
+	public function GetDefaults(){
+		return $this->GetGlobalOption('defaults_set', false);
+	}
+
+	/**
+	 * Set the default alert settings.
+	 */
+	public function SetDefaults(){
+		$this->SetGlobalOption('disable-refresh', '1');
+		$this->SetGlobalOption('items-per-page', '30');
+		$this->SetGlobalOption('dev-options', 'd,p');
+		$this->SetGlobalOption('pruning-limit', '5000');
+		$this->SetGlobalOption('pruning-limit-e', '1');
+		$this->SetGlobalOption('pruning-date', '1 month');
+		$this->SetGlobalOption('pruning-date-e', '1');
+		$this->SetGlobalOption('disabled-alerts', '2010,2011,2046,2051,2000,2001,2002,2003,2008,2012,2014,2016,2017,2019,2021,2023,2024,2025,2027,2049,2050,2053,2054,2055,2062,2004,2005,2006,2007,2009,2013,2015,2018,2020,2022,2026,2028,2047,2048,2059,2060,2061,2064,2029,2030,2031,2032,2033,2034,2035,2036,2037,2038,2039,2040,2041,2056,2057,2058,2063,2042,2043,2044,2045,0,4008,4009,4010,4011,4012,7000,7001,7002,7003,7004,7005,5008,5009');
+		$this->SetGlobalOption('defaults_set', '1');
 	}
 	
 	/**

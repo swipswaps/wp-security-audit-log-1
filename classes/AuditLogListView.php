@@ -177,9 +177,16 @@ class WSAL_AuditLogListView extends WP_List_Table {
 							? __(esc_html(ucwords(implode(', ', $roles))))
 							: '<i>' . __('Unknown', 'wp-security-audit-log') . '</i>';
 				}else{
-					$image = get_avatar(0, 32);
-					$uhtml = '<i>' . __('Unknown', 'wp-security-audit-log') . '</i>';
-					$roles = '<i>' . __('System', 'wp-security-audit-log') . '</i>';
+					// If failed login attempt than show TargetUsername
+					if ($item->alert_id === 1002 && ($tuser = $item->GetMetaValue('TargetUsername',false)) ) {
+						$image = get_avatar(0, 32);
+						$uhtml = '<i>' . $tuser . '</i>';
+						$roles = '<i>' .  __('Unknown', 'wp-security-audit-log') . '</i>';
+					} else {
+						$image = get_avatar(0, 32);
+						$uhtml = '<i>' . __('Unknown', 'wp-security-audit-log') . '</i>';
+						$roles = '<i>' . __('System', 'wp-security-audit-log') . '</i>';
+					}	
 				}
 				return $image . $uhtml . '<br/>' . $roles;
 			case 'scip':
